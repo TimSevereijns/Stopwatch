@@ -3,6 +3,8 @@
 *.lo
 *.o
 *.obj
+*.sdf
+*.opendb
 
 # Precompiled Headers
 *.gch
@@ -26,3 +28,7 @@
 *.exe
 *.out
 *.app
+
+Debug
+Release
+*.vs
