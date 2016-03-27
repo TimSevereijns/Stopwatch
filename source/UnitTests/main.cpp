@@ -18,10 +18,10 @@ namespace
 {
    const auto ONE_SECOND = std::chrono::milliseconds(1000);
 
-   const auto isMeasuredTimeWithinBounds =
+   const auto IsTimeWithinBounds =
       [](const auto measuredTime, const auto expectedTime) -> bool
    {
-      const auto marginOfError{ 1 };
+      const auto marginOfError{ 2 };
 
       return 
          (measuredTime >= expectedTime - marginOfError) &&
@@ -50,7 +50,11 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(results.size() == 4);
       REQUIRE(std::string{ "Slept" } == results[0]);
       REQUIRE(std::string{ "for" } == results[1]);
-      REQUIRE(isMeasuredTimeWithinBounds(stoi(results[2]), ONE_SECOND.count()));
+
+      const bool withinBounds = 
+         IsTimeWithinBounds(stoi(results[2]), static_cast<std::uint64_t>(ONE_SECOND.count()));
+
+      REQUIRE(withinBounds);
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
@@ -68,7 +72,10 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
          units = _units;
       });
 
-      REQUIRE(isMeasuredTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count())));
+      const bool withinBounds =
+         IsTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count()));
+
+      REQUIRE(withinBounds);
       REQUIRE(units == std::string{ "milliseconds" });
    }
 
@@ -83,7 +90,9 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(results.size() == 4);
       REQUIRE(std::string{ "Slept" } == results[0]);
       REQUIRE(std::string{ "for" } == results[1]);
-      REQUIRE(isMeasuredTimeWithinBounds(stoi(results[2]), ONE_SECOND.count()));
+
+      const bool withinBounds = IsTimeWithinBounds(stoi(results[2]), ONE_SECOND.count());
+      REQUIRE(withinBounds);
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
@@ -97,5 +106,8 @@ TEST_CASE("Timing and Saving Milliseconds Elapsed")
       std::this_thread::sleep_for(ONE_SECOND);
    }).GetElapsedTime();
 
-   REQUIRE(isMeasuredTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count())));
+   const bool withinBounds = 
+      IsTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count()));
+   
+   REQUIRE(withinBounds);
 }
