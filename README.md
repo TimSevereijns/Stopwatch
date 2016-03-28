@@ -28,7 +28,7 @@ A C++11 compliant compiler, like MSVC2015.
 
 # Usage Examples
 
-The `Stopwatch` class can be used in several ways to time a particular block of code. In addition to the three constructors that the `Stopwatch` class provides, thre are also several macros that will reduce the boilerplate even further.
+The `Stopwatch` class can be used in several ways to time a particular block of code. In addition to the three constructors that the `Stopwatch` class provides, there are also several macros that will reduce the boilerplate even further.
 
 Using the `Stopwatch(const std::function<void()>&, const char* const)` constructor, timing information can be easily printed out to the console:
 
@@ -69,7 +69,7 @@ Lastly, if you're really looking to save on the boilerplate, consider using one 
 TIME_IN_MILLISECONDS( AnotherSlowTask(), "Slow task ran in " );
 ```
 
-Similar macros are provided for each of the `std::chrono` units of time:
+Similar macros are provided for each of the `std::chrono` time units:
 
 * `TIME_IN_NANOSECONDS`
 * `TIME_IN_MICROSECONDS`
