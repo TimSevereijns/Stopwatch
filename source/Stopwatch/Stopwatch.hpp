@@ -29,68 +29,71 @@
 #include <functional>
 #include <string>
 
-template<typename Type>
-struct TypeName
+namespace StopwatchInternal
 {
-   inline static const char* Resolve() noexcept
+   template<typename Type>
+   struct TypeName
    {
-      return typeid(Type).name();
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return typeid(Type).name();
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::nanoseconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::nanoseconds>
    {
-      return "nanoseconds";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "nanoseconds";
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::microseconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::microseconds>
    {
-      return "microseconds";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "microseconds";
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::milliseconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::milliseconds>
    {
-      return "milliseconds";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "milliseconds";
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::seconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::seconds>
    {
-      return "seconds";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "seconds";
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::minutes>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::minutes>
    {
-      return "minutes";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "minutes";
+      }
+   };
 
-template<>
-struct TypeName<std::chrono::hours>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::hours>
    {
-      return "hours";
-   }
-};
+      inline static const char* Resolve() noexcept
+      {
+         return "hours";
+      }
+   };
+}
 
 /**
 * @brief The Stopwatch class will wrap the function to be timed in a timing block, and then, based
@@ -129,7 +132,7 @@ public:
 
       if (logger)
       {
-         logger(m_elapsed.count(), TypeName<ChronoType>::Resolve());
+         logger(m_elapsed.count(), StopwatchInternal::TypeName<ChronoType>::Resolve());
       }
    }
 
@@ -150,8 +153,10 @@ public:
    {
       Time(functionToTime);
 
-      std::cout << message << m_elapsed.count() << " "
-         << TypeName<ChronoType>::Resolve() << "." << std::endl;
+      std::cout
+         << message << m_elapsed.count() << " "
+         << StopwatchInternal::TypeName<ChronoType>::Resolve()
+         << "." << std::endl;
    }
 
    /**
