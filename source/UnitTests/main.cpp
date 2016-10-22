@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iterator>
 #include <fstream>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -16,17 +17,22 @@
 
 namespace
 {
-   const auto ONE_SECOND = std::chrono::milliseconds(1000);
+   constexpr auto ONE_SECOND = std::chrono::milliseconds(1000);
 
    const auto IsTimeWithinBounds =
-      [](const auto measuredTime, const auto expectedTime) -> bool
+      [] (const auto measuredTime, const auto expectedTime) noexcept -> bool
    {
-      const auto marginOfError{ 2 };
+      constexpr auto marginOfError{ 2 };
 
-      return 
+      return
          (measuredTime >= expectedTime - marginOfError) &&
          (measuredTime <= expectedTime + marginOfError);
    };
+
+   void SleepForOneSecond()
+   {
+      std::this_thread::sleep_for(ONE_SECOND);
+   }
 }
 
 TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
@@ -36,7 +42,7 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
 
    SECTION("Using a Lambda and the Default Message Formatting")
    {
-      const char* const message = "Slept for ";
+      constexpr const char* const message = "Slept for ";
 
       Stopwatch<std::chrono::milliseconds>([&]
       {
@@ -79,6 +85,51 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(units == std::string{ "milliseconds" });
    }
 
+   SECTION("Binding to a Function")
+   {
+      constexpr const char* const message = "Slept for ";
+
+      Stopwatch<std::chrono::milliseconds>(std::bind(&SleepForOneSecond), message);
+
+      std::istream_iterator<std::string> itr{ buffer };
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> results{ itr, end };
+
+      REQUIRE(results.size() == 4);
+      REQUIRE(std::string{ "Slept" } == results[0]);
+      REQUIRE(std::string{ "for" } == results[1]);
+
+      const bool withinBounds =
+         IsTimeWithinBounds(stoi(results[2]), static_cast<std::uint64_t>(ONE_SECOND.count()));
+
+      REQUIRE(withinBounds);
+      REQUIRE(std::string{ "milliseconds." } == results[3]);
+   }
+
+   SECTION("Using a Function Pointer")
+   {
+      constexpr const char* const message = "Slept for ";
+
+      void(*FunctionPtr)(void);
+      FunctionPtr = &SleepForOneSecond;
+
+      Stopwatch<std::chrono::milliseconds>(FunctionPtr, message);
+
+      std::istream_iterator<std::string> itr{ buffer };
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> results{ itr, end };
+
+      REQUIRE(results.size() == 4);
+      REQUIRE(std::string{ "Slept" } == results[0]);
+      REQUIRE(std::string{ "for" } == results[1]);
+
+      const bool withinBounds =
+         IsTimeWithinBounds(stoi(results[2]), static_cast<std::uint64_t>(ONE_SECOND.count()));
+
+      REQUIRE(withinBounds);
+      REQUIRE(std::string{ "milliseconds." } == results[3]);
+   }
+
    SECTION("Using the Macro")
    {
       TIME_IN_MILLISECONDS(std::this_thread::sleep_for(ONE_SECOND), "Slept for ");
@@ -106,8 +157,8 @@ TEST_CASE("Timing and Saving Milliseconds Elapsed")
       std::this_thread::sleep_for(ONE_SECOND);
    }).GetElapsedTime();
 
-   const bool withinBounds = 
+   const bool withinBounds =
       IsTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count()));
-   
+
    REQUIRE(withinBounds);
 }

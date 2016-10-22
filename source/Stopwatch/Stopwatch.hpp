@@ -28,69 +28,58 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <typeinfo>
 
-template<typename Type>
-struct TypeName
+namespace
 {
-   inline static const char* Resolve() noexcept
-   {
-      return typeid(Type).name();
-   }
-};
+   template<typename Type>
+   using NameOfType = decltype(typeid(Type).name());
 
-template<>
-struct TypeName<std::chrono::nanoseconds>
-{
-   inline static const char* Resolve() noexcept
+   template<typename Type>
+   struct TypeName
    {
-      return "nanoseconds";
-   }
-};
+      static NameOfType<Type> value;
+   };
 
-template<>
-struct TypeName<std::chrono::microseconds>
-{
-   inline static const char* Resolve() noexcept
-   {
-      return "microseconds";
-   }
-};
+   template<typename Type>
+   NameOfType<Type> TypeName<Type>::value = typeid(Type).name();
 
-template<>
-struct TypeName<std::chrono::milliseconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::nanoseconds>
    {
-      return "milliseconds";
-   }
-};
+      static constexpr auto value = "nanoseconds";
+   };
 
-template<>
-struct TypeName<std::chrono::seconds>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::microseconds>
    {
-      return "seconds";
-   }
-};
+      static constexpr auto value = "microseconds";
+   };
 
-template<>
-struct TypeName<std::chrono::minutes>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::milliseconds>
    {
-      return "minutes";
-   }
-};
+      static constexpr auto value = "milliseconds";
+   };
 
-template<>
-struct TypeName<std::chrono::hours>
-{
-   inline static const char* Resolve() noexcept
+   template<>
+   struct TypeName<std::chrono::seconds>
    {
-      return "hours";
-   }
-};
+      static constexpr auto value = "seconds";
+   };
+
+   template<>
+   struct TypeName<std::chrono::minutes>
+   {
+      static constexpr auto value = "minutes";
+   };
+
+   template<>
+   struct TypeName<std::chrono::hours>
+   {
+      static constexpr auto value = "hours";
+   };
+}
 
 /**
 * @brief The Stopwatch class will wrap the function to be timed in a timing block, and then, based
@@ -118,18 +107,20 @@ public:
    * Once the std::function has completed execution, the timing results and corresponding units
    * will be passed to the specified callback function.
    *
-   * @param[in] functionToTime  std::function encapsulating the code to be timed.
+   * @param[in] functionToTime  A callable object encapsulating the code to be timed.
    * @param[in] logger          Callback to handle the timing result.
    */
+   template<typename CallableType>
    Stopwatch(
-      const std::function<void()>& functionToTime,
+      CallableType&& functionToTime,
       const LoggingFunction& logger)
+      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
    {
-      Time(functionToTime);
+      Time(std::forward<CallableType>(functionToTime));
 
       if (logger)
       {
-         logger(m_elapsed.count(), TypeName<ChronoType>::Resolve());
+         logger(m_elapsedTime.count(), TypeName<ChronoType>::value);
       }
    }
 
@@ -141,17 +132,24 @@ public:
    * std::cout, along with the specified message. Specifically, the message will be written out
    * first, followed immediately by the elapsed time and the corresponding units.
    *
-   * @param[in] functionToTime  std::function encapsulating the code to be timed.
+   * @param[in] functionToTime  A callable object encapsulating the code to be timed.
    * @param[in] message         Output message.
    */
+   template<typename CallableType>
    Stopwatch(
-      const std::function<void()>& functionToTime,
+      CallableType&& functionToTime,
       const char* const message)
+      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
    {
-      Time(functionToTime);
+      Time(std::forward<CallableType>(functionToTime));
 
-      std::cout << message << m_elapsed.count() << " "
-         << TypeName<ChronoType>::Resolve() << "." << std::endl;
+      std::cout
+         << message
+         << m_elapsedTime.count()
+         << " "
+         << TypeName<ChronoType>::value
+         << "."
+         << std::endl;
    }
 
    /**
@@ -160,9 +158,11 @@ public:
    *
    * In order to retrieve the elapsed time, call GetElapsedTime().
    */
-   Stopwatch(const std::function<void()>& functionToTime)
+   template<typename CallableType>
+   Stopwatch(CallableType&& functionToTime)
+      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
    {
-      Time(functionToTime);
+      Time(std::forward<CallableType>(functionToTime));
    }
 
    /**
@@ -170,21 +170,26 @@ public:
    */
    std::uint64_t GetElapsedTime()
    {
-      return m_elapsed.count();
+      return m_elapsedTime.count();
    }
 
 private:
-   void Time(const std::function<void()>& functionToTime)
+
+   /**
+   * @todo Once C++17 arrives: `noexcept(std::is_nothrow_callable_v<CallableType>)`
+   */
+   template<typename CallableType>
+   void Time(CallableType&& functionToTime) noexcept(noexcept(functionToTime))
    {
       const auto start = std::chrono::high_resolution_clock::now();
 
       functionToTime();
 
       const auto end = std::chrono::high_resolution_clock::now();
-      m_elapsed = std::chrono::duration_cast<ChronoType>(end - start);
+      m_elapsedTime = std::chrono::duration_cast<ChronoType>(end - start);
    }
 
-   ChronoType m_elapsed;
+   ChronoType m_elapsedTime;
 };
 
 #define TIME_IN_NANOSECONDS(code, message)   \
