@@ -8,7 +8,7 @@ In timing several aspects of a program I was working on, I got tired of writing 
 
 Without this class, timing a block of code generally looks like this:
 
-```
+```C++
 const auto startTime = std::chrono::high_resolution_clock::now();
 SomeTask();
 const auto endTime = std::chrono::high_resolution_clock::now();
@@ -18,7 +18,7 @@ std::cout << " Some task ran in " << duration.count() << std::endl;
 
 With this class, the snippet above can be reduced to the following:
 
-```
+```C++
 TIME_IN_MILLISECONDS( SomeTask(), "Some task ran in " );
 ```
 
@@ -32,7 +32,7 @@ The `Stopwatch` class can be used in several ways to time a particular block of 
 
 Using the `Stopwatch(const std::function<void()>&, const char* const)` constructor, timing information can be easily printed out to the console:
 
-```
+```C++
 Stopwatch<std::chrono::milliseconds>([&]
 {
   FunctionToBeTimed();
@@ -56,7 +56,7 @@ In general, this constructor will output messages of the form: message + time + 
 
 Should you desire to save the elapsed time to a variable, the `Stopwatch(const std::function<void()>&)` constructor can be used:
 
-```
+```C++
 const auto elapsedTime = Stopwatch<std::chrono::seconds>([&]
 {
   // Time consuming task...
