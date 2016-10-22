@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Catch.hpp" />
+    <ClInclude Include="scopeExit.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

@@ -33,16 +33,14 @@
 namespace
 {
    template<typename Type>
-   using NameOfType = decltype(typeid(Type).name());
-
-   template<typename Type>
    struct TypeName
    {
-      static NameOfType<Type> value;
+      // Evaluated at runtime:
+      static const decltype(typeid(Type).name()) value;
    };
 
    template<typename Type>
-   NameOfType<Type> TypeName<Type>::value = typeid(Type).name();
+   decltype(typeid(Type).name()) TypeName<Type>::value = typeid(Type).name();
 
    template<>
    struct TypeName<std::chrono::nanoseconds>
@@ -82,9 +80,9 @@ namespace
 }
 
 /**
-* @brief The Stopwatch class will wrap the function to be timed in a timing block, and then, based
-* on which constructor was called, pass the resulting timing information to either std::cout or a
-* user-defined function upon completion of the targeted function.
+* @brief The Stopwatch class will wrap the callable object to be timed in a timing block, and then,
+* based on which constructor was called, pass the resulting timing information to either std::cout or a
+* user-defined output stream or function upon completion of timing.
 *
 * @tparam ChronoType               One of the following std::chrono time representations:
 *                                     @li std::chrono::nanoseconds
@@ -98,29 +96,29 @@ template<typename ChronoType>
 class Stopwatch
 {
 public:
-   using LoggingFunction = std::function<void(std::uint64_t, const std::string&)>;
+   using CallbackType = std::function<void (ChronoType, std::string)>;
 
    /**
    * @brief This Stopwatch constructor executes and times the code encapsulated within the
-   * std::function object.
+   * callable object.
    *
-   * Once the std::function has completed execution, the timing results and corresponding units
+   * Once the callable object has completed execution, the timing results and corresponding units
    * will be passed to the specified callback function.
    *
-   * @param[in] functionToTime  A callable object encapsulating the code to be timed.
-   * @param[in] logger          Callback to handle the timing result.
+   * @param[in] callable            A callable object encapsulating the code to be timed.
+   * @param[in] callback            Callback to handle the timing result.
    */
    template<typename CallableType>
    Stopwatch(
-      CallableType&& functionToTime,
-      const LoggingFunction& logger)
-      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
+      CallableType&& callable,
+      const CallbackType& callback)
+      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
-      Time(std::forward<CallableType>(functionToTime));
+      ExecuteAndTime(std::forward<CallableType>(callable));
 
-      if (logger)
+      if (callback)
       {
-         logger(m_elapsedTime.count(), TypeName<ChronoType>::value);
+         callback(m_elapsedTime, std::move(TypeName<ChronoType>::value));
       }
    }
 
@@ -129,21 +127,23 @@ public:
    * std::function object.
    *
    * Once the targeted code has completed execution, the timing results will be written out to
-   * std::cout, along with the specified message. Specifically, the message will be written out
+   * output stream, along with the specified message. Specifically, the message will be written out
    * first, followed immediately by the elapsed time and the corresponding units.
    *
-   * @param[in] functionToTime  A callable object encapsulating the code to be timed.
-   * @param[in] message         Output message.
+   * @param[in] callable            A callable object encapsulating the code to be timed.
+   * @param[in] message             Output message.
+   * @param[in] outputStream        The std::ostream object to pipe the message and time to.
    */
    template<typename CallableType>
    Stopwatch(
-      CallableType&& functionToTime,
-      const char* const message)
-      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
+      CallableType&& callable,
+      const char* const message,
+      std::ostream& outputStream = std::cout)
+      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
-      Time(std::forward<CallableType>(functionToTime));
+      ExecuteAndTime(std::forward<CallableType>(callable));
 
-      std::cout
+      outputStream
          << message
          << m_elapsedTime.count()
          << " "
@@ -156,21 +156,21 @@ public:
    * @brief This Stopwatch constructor will time the code encapsulated in the std::function object
    * and then save the result to a member variable.
    *
-   * In order to retrieve the elapsed time, call GetElapsedTime().
+   * In order to retrieve the elapsed time, call GetElapsedTime(). @See GetElapsedTime().
    */
    template<typename CallableType>
-   Stopwatch(CallableType&& functionToTime)
-      noexcept(noexcept(Time(std::forward<CallableType>(functionToTime))))
+   Stopwatch(CallableType&& callable)
+      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
-      Time(std::forward<CallableType>(functionToTime));
+      ExecuteAndTime(std::forward<CallableType>(callable));
    }
 
    /**
    * @returns The elapsed time in ChronoType units.
    */
-   std::uint64_t GetElapsedTime()
+   ChronoType GetElapsedTime()
    {
-      return m_elapsedTime.count();
+      return m_elapsedTime;
    }
 
 private:
@@ -179,11 +179,11 @@ private:
    * @todo Once C++17 arrives: `noexcept(std::is_nothrow_callable_v<CallableType>)`
    */
    template<typename CallableType>
-   void Time(CallableType&& functionToTime) noexcept(noexcept(functionToTime))
+   void ExecuteAndTime(CallableType&& callable) noexcept(noexcept(callable))
    {
       const auto start = std::chrono::high_resolution_clock::now();
 
-      functionToTime();
+      callable();
 
       const auto end = std::chrono::high_resolution_clock::now();
       m_elapsedTime = std::chrono::duration_cast<ChronoType>(end - start);

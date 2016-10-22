@@ -4,6 +4,7 @@
 #include "Catch.hpp"
 
 #include "../Stopwatch/Stopwatch.hpp"
+#include "scopeExit.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -35,12 +36,26 @@ namespace
    }
 }
 
-TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
+TEST_CASE("Timing Code Execution")
 {
    std::stringstream buffer;
    std::streambuf* oldBuffer = std::cout.rdbuf(buffer.rdbuf());
 
-   SECTION("Using a Lambda and the Default Message Formatting")
+   ON_SCOPE_EXIT{ std::cout.rdbuf(oldBuffer); };
+
+   SECTION("Saving the Elapsed Time")
+   {
+      const auto elapsedTime = Stopwatch<std::chrono::milliseconds>([&]
+      {
+         std::this_thread::sleep_for(ONE_SECOND);
+      }).GetElapsedTime();
+
+      const bool withinBounds = IsTimeWithinBounds(elapsedTime.count(), ONE_SECOND.count());
+
+      REQUIRE(withinBounds);
+   }
+
+   SECTION("Outputting the Elapsed Time to the Default Output Stream")
    {
       constexpr const char* const message = "Slept for ";
 
@@ -57,35 +72,60 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(std::string{ "Slept" } == results[0]);
       REQUIRE(std::string{ "for" } == results[1]);
 
-      const bool withinBounds = 
+      const bool withinBounds =
          IsTimeWithinBounds(stoi(results[2]), static_cast<std::uint64_t>(ONE_SECOND.count()));
 
       REQUIRE(withinBounds);
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
-   SECTION("Using one Lambda to Time and Another to Handle Results")
+   SECTION("Outputting the Elapsed Time to a User Specified Output Stream")
    {
-      std::uint64_t elapsedTime;
-      std::string units;
+      std::stringstream customBuffer;
+
+      constexpr const char* const message = "Slept for ";
 
       Stopwatch<std::chrono::milliseconds>([&]
       {
          std::this_thread::sleep_for(ONE_SECOND);
-      }, [&](std::uint64_t _elapsedTime, const std::string& _units)
-      {
-         elapsedTime = _elapsedTime;
-         units = _units;
-      });
+      }, message, customBuffer);
+
+      std::istream_iterator<std::string> itr{ customBuffer };
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> results{ itr, end };
+
+      REQUIRE(results.size() == 4);
+      REQUIRE(std::string{ "Slept" } == results[0]);
+      REQUIRE(std::string{ "for" } == results[1]);
 
       const bool withinBounds =
-         IsTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count()));
+         IsTimeWithinBounds(stoi(results[2]), static_cast<std::uint64_t>(ONE_SECOND.count()));
 
       REQUIRE(withinBounds);
-      REQUIRE(units == std::string{ "milliseconds" });
+      REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
-   SECTION("Binding to a Function")
+   SECTION("Handling the Elapsed Time with a Callback")
+   {
+      std::chrono::milliseconds elapsedTime;
+      std::string chronoUnits;
+
+      Stopwatch<std::chrono::milliseconds>([&]
+      {
+         std::this_thread::sleep_for(ONE_SECOND);
+      }, [&] (auto elapsed, auto units)
+      {
+         elapsedTime = elapsed;
+         chronoUnits = std::move(units);
+      });
+
+      const bool withinBounds = IsTimeWithinBounds(elapsedTime.count(), ONE_SECOND.count());
+
+      REQUIRE(withinBounds);
+      REQUIRE(chronoUnits == std::string{ "milliseconds" });
+   }
+
+   SECTION("Timing a Bound Function")
    {
       constexpr const char* const message = "Slept for ";
 
@@ -106,7 +146,7 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
-   SECTION("Using a Function Pointer")
+   SECTION("Time a Function using a Function Pointer")
    {
       constexpr const char* const message = "Slept for ";
 
@@ -130,7 +170,7 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
 
-   SECTION("Using the Macro")
+   SECTION("Using the Convenience Macro")
    {
       TIME_IN_MILLISECONDS(std::this_thread::sleep_for(ONE_SECOND), "Slept for ");
 
@@ -146,19 +186,4 @@ TEST_CASE("Timing Code Blocks and Outputting Message to Buffer")
       REQUIRE(withinBounds);
       REQUIRE(std::string{ "milliseconds." } == results[3]);
    }
-
-   std::cout.rdbuf(oldBuffer);
-}
-
-TEST_CASE("Timing and Saving Milliseconds Elapsed")
-{
-   const auto elapsedTime = Stopwatch<std::chrono::milliseconds>([&]
-   {
-      std::this_thread::sleep_for(ONE_SECOND);
-   }).GetElapsedTime();
-
-   const bool withinBounds =
-      IsTimeWithinBounds(elapsedTime, static_cast<std::uint64_t>(ONE_SECOND.count()));
-
-   REQUIRE(withinBounds);
 }

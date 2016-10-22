@@ -18,6 +18,9 @@
     <ClInclude Include="Catch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="scopeExit.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
