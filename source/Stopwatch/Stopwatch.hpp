@@ -27,6 +27,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <typeinfo>
 
