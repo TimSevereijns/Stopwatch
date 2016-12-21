@@ -31,13 +31,13 @@
 #include <string>
 #include <typeinfo>
 
-namespace
+namespace StopwatchDetail
 {
    template<typename Type>
    struct TypeName
    {
       // Evaluated at runtime:
-      static const decltype(typeid(Type).name()) value;
+      static decltype(typeid(Type).name()) value;
    };
 
    template<typename Type>
@@ -119,7 +119,7 @@ public:
 
       if (callback)
       {
-         callback(m_elapsedTime, std::move(TypeName<ChronoType>::value));
+         callback(m_elapsedTime, std::move(StopwatchDetail::TypeName<ChronoType>::value));
       }
    }
 
@@ -148,7 +148,7 @@ public:
          << message
          << m_elapsedTime.count()
          << " "
-         << TypeName<ChronoType>::value
+         << StopwatchDetail::TypeName<ChronoType>::value
          << "."
          << std::endl;
    }
@@ -177,9 +177,9 @@ public:
    /**
    * @returns A character array containing the chrono resolution name.
    */
-   constexpr auto GetUnitsAsString() const
+   constexpr auto GetUnitsAsCharacterArray() const
    {
-      return TypeName<ChronoType>::value;
+      return StopwatchDetail::TypeName<ChronoType>::value;
    }
 
 private:
