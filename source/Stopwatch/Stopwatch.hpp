@@ -31,7 +31,7 @@
 #include <string>
 #include <typeinfo>
 
-namespace StopwatchDetail
+namespace StopwatchInternals
 {
    template<typename Type>
    struct TypeName
@@ -119,7 +119,7 @@ public:
 
       if (callback)
       {
-         callback(m_elapsedTime, std::move(StopwatchDetail::TypeName<ChronoType>::value));
+         callback(m_elapsedTime, std::move(StopwatchInternals::TypeName<ChronoType>::value));
       }
    }
 
@@ -148,7 +148,7 @@ public:
          << message
          << m_elapsedTime.count()
          << " "
-         << StopwatchDetail::TypeName<ChronoType>::value
+         << StopwatchInternals::TypeName<ChronoType>::value
          << "."
          << std::endl;
    }
@@ -179,7 +179,7 @@ public:
    */
    constexpr auto GetUnitsAsCharacterArray() const
    {
-      return StopwatchDetail::TypeName<ChronoType>::value;
+      return StopwatchInternals::TypeName<ChronoType>::value;
    }
 
 private:
