@@ -37,11 +37,8 @@ namespace StopwatchInternals
    struct TypeName
    {
       // Evaluated at runtime:
-      static decltype(typeid(Type).name()) value;
+      static constexpr decltype(typeid(Type).name()) value = typeid(Type).name();
    };
-
-   template<typename Type>
-   decltype(typeid(Type).name()) TypeName<Type>::value = typeid(Type).name();
 
    template<>
    struct TypeName<std::chrono::nanoseconds>
@@ -113,7 +110,6 @@ public:
    Stopwatch(
       CallableType&& callable,
       const CallbackType& callback)
-      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
       ExecuteAndTime(std::forward<CallableType>(callable));
 
@@ -140,7 +136,6 @@ public:
       CallableType&& callable,
       const char* const message,
       std::ostream& outputStream = std::cout)
-      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
       ExecuteAndTime(std::forward<CallableType>(callable));
 
@@ -161,7 +156,6 @@ public:
    */
    template<typename CallableType>
    Stopwatch(CallableType&& callable)
-      noexcept(noexcept(ExecuteAndTime(std::forward<CallableType>(callable))))
    {
       ExecuteAndTime(std::forward<CallableType>(callable));
    }
