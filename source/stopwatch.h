@@ -184,11 +184,11 @@ private:
    template<typename CallableType>
    void ExecuteAndTime(CallableType&& callable) noexcept(noexcept(callable))
    {
-      const auto start = std::chrono::high_resolution_clock::now();
+      const auto start = std::chrono::steady_clock::now();
 
       callable();
 
-      const auto end = std::chrono::high_resolution_clock::now();
+      const auto end = std::chrono::steady_clock::now();
       m_elapsedTime = std::chrono::duration_cast<ChronoType>(end - start);
    }
 

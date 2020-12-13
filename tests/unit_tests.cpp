@@ -1,10 +1,8 @@
-#pragma once
-
 #define CATCH_CONFIG_MAIN
-#include "Catch.hpp"
+#include <catch2/catch.hpp>
 
-#include "../Stopwatch/Stopwatch.hpp"
-#include "scopeExit.hpp"
+#include "stopwatch.h"
+#include "scope_exit.h"
 
 #include <algorithm>
 #include <iostream>
@@ -18,12 +16,12 @@
 
 namespace
 {
-   constexpr auto ONE_SECOND = std::chrono::milliseconds(1000);
+    constexpr auto ONE_SECOND = std::chrono::milliseconds{ 1000 };
 
    const auto IsTimeWithinBounds =
-      [] (const auto measuredTime, const auto expectedTime) noexcept -> bool
+      [] (const auto measuredTime, const auto expectedTime) noexcept
    {
-      constexpr auto marginOfError{ 2 };
+      constexpr auto marginOfError{ 50 };
 
       return
          (measuredTime >= expectedTime - marginOfError) &&
@@ -39,7 +37,7 @@ namespace
 TEST_CASE("Timing Code Execution")
 {
    std::stringstream buffer;
-   std::streambuf* oldBuffer = std::cout.rdbuf(buffer.rdbuf());
+   auto* oldBuffer = std::cout.rdbuf(buffer.rdbuf());
 
    ON_SCOPE_EXIT{ std::cout.rdbuf(oldBuffer); };
 
@@ -47,10 +45,10 @@ TEST_CASE("Timing Code Execution")
    {
       const auto elapsedTime = Stopwatch<std::chrono::milliseconds>([&]
       {
-         std::this_thread::sleep_for(ONE_SECOND);
+         std::this_thread::sleep_for(std::chrono::seconds{ 1 });
       }).GetElapsedTime();
 
-      const bool withinBounds = IsTimeWithinBounds(elapsedTime.count(), ONE_SECOND.count());
+      const bool withinBounds = IsTimeWithinBounds(elapsedTime.count(), std::chrono::milliseconds{ 1000 }.count());
 
       REQUIRE(withinBounds);
    }
@@ -150,8 +148,7 @@ TEST_CASE("Timing Code Execution")
    {
       constexpr const char* const message = "Slept for ";
 
-      void(*FunctionPtr)(void);
-      FunctionPtr = &SleepForOneSecond;
+      void(*FunctionPtr)(void) = &SleepForOneSecond;
 
       Stopwatch<std::chrono::milliseconds>(FunctionPtr, message);
 
