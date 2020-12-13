@@ -19,9 +19,9 @@ namespace
     constexpr auto ONE_SECOND = std::chrono::milliseconds{ 1000 };
 
    const auto IsTimeWithinBounds =
-      [] (const auto measuredTime, const auto expectedTime) noexcept
+      [] (const std::uint64_t measuredTime, const std::uint64_t expectedTime) noexcept
    {
-      constexpr auto marginOfError{ 50 };
+      constexpr std::uint64_t marginOfError = 50ull;
 
       return
          (measuredTime >= expectedTime - marginOfError) &&
