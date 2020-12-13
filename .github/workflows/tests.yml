@@ -41,4 +41,4 @@ jobs:
       - name: Run Tests
         run: |
           cd ${GITHUB_WORKSPACE}/build
-          bin/tests
+          ./tests
