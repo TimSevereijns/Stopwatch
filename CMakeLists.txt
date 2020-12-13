@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 enable_language(CXX)
 
-project(Json-Utils)
+project(Stopwatch)
 
 if (UNIX)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Werror -Wpedantic --coverage")
@@ -27,16 +27,16 @@ set(SOURCE_DIR
 set(THIRD_PARTY
     third-party/catch2/single_include)
 
-add_executable(cpp17 ${SOURCES})
+add_executable(tests ${SOURCES})
 
-target_include_directories(cpp17 PUBLIC ${SOURCE_DIR} ${THIRD_PARTY})
+target_include_directories(tests PUBLIC ${SOURCE_DIR} ${THIRD_PARTY})
 
-set_target_properties(cpp17 PROPERTIES
+set_target_properties(tests PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
 
 if (UNIX)
-    target_link_libraries(cpp17 stdc++)
+    target_link_libraries(tests stdc++)
 endif (UNIX)
