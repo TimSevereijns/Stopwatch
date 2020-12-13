@@ -25,12 +25,7 @@
 #pragma once
 
 #include <chrono>
-#include <cstdint>
-#include <functional>
-#include <iostream>
-#include <string>
 #include <type_traits>
-#include <typeinfo>
 
 namespace detail
 {
@@ -92,7 +87,8 @@ template <typename ChronoType> class Stopwatch
      *
      * In order to retrieve the elapsed time, call GetElapsedTime(). @See GetElapsedTime().
      */
-    template <typename CallableType> Stopwatch(CallableType&& callable)
+    template <typename CallableType>
+    Stopwatch(CallableType&& callable) noexcept(std::is_nothrow_invocable_v<CallableType>)
     {
         ExecuteAndTime(std::forward<CallableType>(callable));
     }
@@ -100,7 +96,7 @@ template <typename ChronoType> class Stopwatch
     /**
      * @returns The elapsed time in ChronoType units.
      */
-    ChronoType GetElapsedTime() const
+    ChronoType GetElapsedTime() const noexcept
     {
         return m_elapsedTime;
     }
@@ -108,7 +104,7 @@ template <typename ChronoType> class Stopwatch
     /**
      * @returns A character array containing the chrono resolution name.
      */
-    constexpr auto GetUnitsAsString() const
+    constexpr const char* GetUnitsAsString() const noexcept
     {
         return detail::ChronoTypeName<ChronoType>::value;
     }
