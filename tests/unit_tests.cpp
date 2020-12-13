@@ -11,14 +11,14 @@
 namespace
 {
 template <typename Measured, typename Expected>
-auto IsTimeWithinBounds(const Measured& measuredTime, const Expected& expectedTime) noexcept
+bool IsTimeWithinBounds(const Measured& measuredTime, const Expected& expectedTime) noexcept
 {
     constexpr auto epsilon = std::chrono::milliseconds{ 50 };
     const auto expected = std::chrono::duration_cast<std::chrono::milliseconds>(expectedTime);
     const auto measured = std::chrono::duration_cast<std::chrono::milliseconds>(measuredTime);
 
     return (measured >= expected - epsilon) && (measured <= expected + epsilon);
-};
+}
 
 void SleepForOneSecond()
 {
