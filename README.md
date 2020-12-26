@@ -1,5 +1,7 @@
 # Stopwatch
 
+[![codecov](https://codecov.io/gh/TimSevereijns/Stopwatch/branch/master/graph/badge.svg?token=AwpiiHgIg5)](https://codecov.io/gh/TimSevereijns/Stopwatch)
+
 `Stopwatch` is a header-only class that encapsulates the boilerplate needed to time a block of code using the standard `std::chrono` infrastructure.
 
 # Example
